@@ -13,6 +13,7 @@ vscode ➜ /workspaces/topoViewer (development) $ go run go_cloudshellwrapper/cm
 
 
 ```
+bash -c "$(wget -qO - https://raw.githubusercontent.com/asadarafat/topoViewer/development/tools/getGithubApi.sh)" -- --version 1.2.3
 
 
 ```Shell
@@ -59,3 +60,7 @@ go run go_cloudshellwrapper/cmd/main.go clab --allowed-hostnames 149.204.21.68 -
 
 vscode ➜ /workspaces/topoViewer/dist (development ✗) $ ./topoviewer clab -t topo-topoViewerDemo.yaml  
 ```
+
+
+sudo go run go_topoengine/cmd/main.go 
+	tools.CommentProcessor("./html-public/nokia-ServiceProvider/button.html", "./html-static/template/clab/button.tmpl")

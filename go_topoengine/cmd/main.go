@@ -2,6 +2,9 @@ package main
 
 import (
 	// tools "github.com/asadarafat/topoViewer/go_tools"
+
+	log "github.com/sirupsen/logrus"
+
 	tools "github.com/asadarafat/topoViewer/go_tools"
 	topoengine "github.com/asadarafat/topoViewer/go_topoengine"
 )
@@ -9,11 +12,102 @@ import (
 // // "io/ioutil"
 // // "os"
 
+// type Connection struct {
+// 	*ssh.Client
+// 	password string
+// }
+
+// func Connect(addr, user, password string) (*Connection, error) {
+// 	sshConfig := &ssh.ClientConfig{
+// 		User: user,
+// 		Auth: []ssh.AuthMethod{
+// 			ssh.Password(password),
+// 		},
+// 		HostKeyCallback: ssh.HostKeyCallback(func(hostname string, remote net.Addr, key ssh.PublicKey) error { return nil }),
+// 	}
+
+// 	conn, err := ssh.Dial("tcp", addr, sshConfig)
+// 	if err != nil {
+// 		return nil, err
+// 	}
+
+// 	return &Connection{conn, password}, nil
+
+// }
+
+// func (conn *Connection) SendCommands(cmds ...string) ([]byte, error) {
+// 	session, err := conn.NewSession()
+// 	if err != nil {
+// 		log.Fatal(err)
+// 	}
+// 	defer session.Close()
+
+// 	modes := ssh.TerminalModes{
+// 		ssh.ECHO:          0,     // disable echoing
+// 		ssh.TTY_OP_ISPEED: 14400, // input speed = 14.4kbaud
+// 		ssh.TTY_OP_OSPEED: 14400, // output speed = 14.4kbaud
+// 	}
+
+// 	err = session.RequestPty("xterm", 80, 40, modes)
+// 	if err != nil {
+// 		return []byte{}, err
+// 	}
+
+// 	in, err := session.StdinPipe()
+// 	if err != nil {
+// 		log.Fatal(err)
+// 	}
+
+// 	out, err := session.StdoutPipe()
+// 	if err != nil {
+// 		log.Fatal(err)
+// 	}
+
+// 	var output []byte
+
+// 	go func(in io.WriteCloser, out io.Reader, output *[]byte) {
+// 		var (
+// 			line string
+// 			r    = bufio.NewReader(out)
+// 		)
+// 		for {
+// 			b, err := r.ReadByte()
+// 			if err != nil {
+// 				break
+// 			}
+
+// 			*output = append(*output, b)
+
+// 			if b == byte('\n') {
+// 				line = ""
+// 				continue
+// 			}
+
+// 			line += string(b)
+
+// 			if strings.HasPrefix(line, "[sudo] password for ") && strings.HasSuffix(line, ": ") {
+// 				_, err = in.Write([]byte(conn.password + "\n"))
+// 				if err != nil {
+// 					break
+// 				}
+// 			}
+// 		}
+// 	}(in, out, &output)
+
+// 	cmd := strings.Join(cmds, "; ")
+// 	_, err = session.Output(cmd)
+// 	if err != nil {
+// 		return []byte{}, err
+// 	}
+
+//		return output, nil
+//	}
 func main() {
 
 	cytoUiGo := topoengine.CytoTopology{}
 	cytoUiGo.LogLevel = 5
 	cytoUiGo.InitLogger()
+
 	// cytoUiGo.InitLoggerDigitalTwin()
 
 	// clab run
@@ -821,54 +915,77 @@ func main() {
 	// }
 
 	// // tools.CommentProcessor("./html-public/demo/button.html", "./html-static/template/clab/button.tmpl")
+	//// ini penting
 	tools.CommentProcessor("./html-public/nokia-ServiceProvider/button.html", "./html-static/template/clab/button.tmpl")
 
 	// cytoUiGo.GetDockerNodeStatusViaUnixSocket("clab-3tierSmall-dcgw-1", "localhost")
 
+	// var neHost = "149.204.21.68"
+	// var nePort = "22"
+	// var neUser = "aarafat"
+	// var nePass = "!Wulandar100"
+	// var cmd1 = "sudo clab inspect --all"
+
+	// // Command to execute the Python script
+	// cmd := exec.Command("python3", "./html-static/actions/exampleScript.py", "arg1", "arg2")
+	// // cmd := exec.Command("whoami")
+
+	// // Capture standard output and error
+	// out, err := cmd.CombinedOutput()
+	// if err != nil {
+	// 	log.Fatalf("Failed to execute Python script: %v", err)
+	// }
+
+	// // Print the output
+	// fmt.Printf("Python script output:\n%s\n", out)
+
+	// // ssh refers to the custom package above
+	// conn, err := Connect(neHost+":"+nePort, neUser, nePass)
+	// if err != nil {
+	// 	log.Fatal(err)
+	// }
+
+	// output, err := conn.SendCommands("sudo clab inspect --all", "sudo /usr/bin/containerlab tools netem set -n clab-nokia-ServiceProvider-R06-PE-ASBR -i eth3 --delay 5000ms --jitter 0ms --rate 0 --loss 0")
+	// if err != nil {
+	// 	log.Fatal(err)
+	// }
+
+	// fmt.Println(string(output))
+
+	// tools.SshSudo(neHost, nePort, neUser, nePass, cmd1)
+
+	////
+	cyTopo := topoengine.CytoTopology{}
+	toolLogger := tools.Logs{}
+
+	cyTopo.InitLogger()
+	cyTopo.LogLevel = uint32(toolLogger.MapLogLevelStringToNumber("debug"))
+	toolLogger.InitLogger("logs/topoengine-CytoTopology.log", cyTopo.LogLevel)
+
+	backupDirectory := "/var/asad/topoViewer/html-public/nokia-ServiceProvider/node-backup/clab-nokia-ServiceProvider-R09-PE-ASBR"
+	// err := cyTopo.NodeConfigBackup(
+	// 	"vr-sros",
+	// 	"10.2.1.109",
+	// 	"admin",
+	// 	"admin",
+	// 	"backup.cfg",
+	// 	backupDirectory,
+	// 	"backup",
+	// )
+
+	err := cyTopo.NodeConfigBackupRestore(
+		"vr-sros",
+		"10.2.1.109",
+		"admin",
+		"admin",
+		"clab-nokia-ServiceProvider-R09-PE-ASBR-running.cfg",
+		backupDirectory,
+		"restore",
+	)
+
+	// time=2024-07-14T13:37:57Z level=info msg=requestData-param1-param1DataString: {"routerKind":"vr-sros","routerID":"10.2.1.109","routerUserName":"admin","routerPassword":"admin","backupPath":"/var/asad/topoViewer/html-public/nokia-ServiceProvider/node-backup/clab-nokia-ServiceProvider-R09-PE-ASBR","action":"backup"}
+
+	if err != nil {
+		log.Errorf("Failed to execute device operation: %v", err)
+	}
 }
-
-// test ssh
-// test ssh
-// test ssh
-// test ssh
-// package main
-
-// import (
-// 	"bytes"
-// 	"fmt"
-// 	"log"
-
-// 	"golang.org/x/crypto/ssh"
-// )
-
-// func main() {
-// 	config := &ssh.ClientConfig{
-// 		User: "root",
-// 		Auth: []ssh.AuthMethod{
-// 			ssh.Password("Lab-Her0"),
-// 		},
-// 		HostKeyCallback: ssh.InsecureIgnoreHostKey(),
-// 	}
-// 	client, err := ssh.Dial("tcp", "138.203.26.59:22", config)
-// 	if err != nil {
-// 		log.Fatal("Failed to dial: ", err)
-// 	}
-
-// 	// Each ClientConn can support multiple interactive sessions,
-// 	// represented by a Session.
-// 	session, err := client.NewSession()
-// 	if err != nil {
-// 		log.Fatal("Failed to create session: ", err)
-// 	}
-// 	defer session.Close()
-
-// 	// Once a Session is created, you can execute a single command on
-// 	// the remote side using the Run method.
-// 	var b bytes.Buffer
-// 	session.Stdout = &b
-// 	if err := session.Run("docker ps --all --format json"); err != nil {
-// 		log.Fatal("Failed to run: " + err.Error())
-// 	}
-// 	fmt.Println(b.String())
-
-// }
